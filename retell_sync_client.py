@@ -21,9 +21,12 @@ def load_and_validate_env(var_name):
     return value
 
 api_key = load_and_validate_env("RETELL_API_KEY")
-# agent_id = load_and_validate_env("SINGLE_PROMPT_AGENT_ID")
 from_phone_num = load_and_validate_env("FROM_PHONE_NUMBER")
 to_phone_num = load_and_validate_env("TO_PHONE_NUMBER")
+max_wait_time = int(load_and_validate_env("MAX_WAIT_TIME"))
+wait_interv = int(load_and_validate_env("WAIT_INTERVAL"))
+my_full_name = load_and_validate_env("MY_FULL_NAME")
+my_phone_number = load_and_validate_env("MY_PHONE_NUMBER")
 
 sync_client = Retell(api_key=api_key)
 
@@ -31,7 +34,11 @@ def create_phone_call():
     try:
         response = sync_client.call.create_phone_call(
             from_number=from_phone_num,
-            to_number=to_phone_num
+            to_number=to_phone_num,
+            retell_llm_dynamic_variables={
+                "my_full_name": my_full_name,
+                "my_phone_number": my_phone_number
+                }
         )
         logging.info(f"Call initiated, call_id: {response.call_id}")
         return response.call_id
@@ -48,8 +55,8 @@ def get_call_details(call_id):
 
 def main():
     call_id = create_phone_call()
-    max_wait_sec = 180   # e.g., 10 minute timeout
-    wait_interval = 6
+    max_wait_sec = max_wait_time   # e.g., 3 minute timeout
+    wait_interval = wait_interv
     waited = 0
 
     while waited < max_wait_sec:
